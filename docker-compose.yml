@@ -1,0 +1,33 @@
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: trasherdb
+      POSTGRES_USER: trasheruser
+      POSTGRES_PASSWORD: trasherpass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
+  backend:
+    build: ./backend
+    volumes:
+      - ./backend/src:/app:z
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    command: python manage.py runserver 0.0.0.0:8000
+    environment:
+      - DEBUG=1
+      - DB_NAME=trasherdb
+      - DB_USER=trasheruser
+      - DB_PASSWORD=trasherpass
+      - DB_HOST=db
+      - DB_PORT=5432
+
+
+volumes:
+  postgres_data:
