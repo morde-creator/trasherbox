@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'cotizaciones',
     'productos',
     'ventas',
+    'proveedores',
 
 ]
 
