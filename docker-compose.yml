@@ -1,0 +1,44 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: trasherdb
+      POSTGRES_USER: trasheruser
+      POSTGRES_PASSWORD: trasherpass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
+  backend:
+    build: ./trasherbox/backend
+    volumes:
+      - ./trasherbox/backend/src:/app:z
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    command: ["/wait-for-it.sh", "db:5432", "--", "python", "manage.py", "runserver", "0.0.0.0:8000"]
+    environment:
+      - DEBUG=1
+      - DB_NAME=trasherdb
+      - DB_USER=trasheruser
+      - DB_PASSWORD=trasherpass
+      - DB_HOST=db
+      - DB_PORT=5432
+
+  frontend:
+    build: ./trasherbox-front
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+
+
+volumes:
+  postgres_data:
+
