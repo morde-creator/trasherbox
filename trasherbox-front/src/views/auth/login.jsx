@@ -15,7 +15,7 @@ export default function AuthLogin() {
     try {
       console.log({ username, password });
 
-    const res = await axios.post('http://backend:8000/api/login/', {
+    const res = await axios.post('http://localhost:8000/api/login/', {
       username: username.trim(),
       password: password.trim(),
     }, {
