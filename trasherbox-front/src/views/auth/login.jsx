@@ -13,14 +13,21 @@ export default function AuthLogin() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:8000/api/login/', {
-        username,
-        password,
-      });
+      console.log({ username, password });
+
+    const res = await axios.post('http://backend:8000/api/login/', {
+      username: username.trim(),
+      password: password.trim(),
+    }, {
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+    });
+
       localStorage.setItem('access_token', res.data.access);
       router.push('/dashboard');
     } catch (err) {
-      console.error(err);
+      console.error('Error al iniciar sesión:', err);
       alert('Usuario o contraseña inválidos');
     }
   };
