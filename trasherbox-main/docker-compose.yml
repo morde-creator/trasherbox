@@ -1,0 +1,71 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:15
+    container_name: trasherbox-db
+    environment:
+      POSTGRES_DB: trasherdb
+      POSTGRES_USER: trasheruser
+      POSTGRES_PASSWORD: trasherpass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trasheruser -d trasherdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    container_name: trasherbox-backend
+    build:
+      context: ./trasherbox/backend
+    volumes:
+      - ./trasherbox/backend/src:/app:z
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "
+        echo 'Esperando a la base de datos...' &&
+        python manage.py migrate &&
+        python manage.py runserver 0.0.0.0:8000
+      "
+    environment:
+      DEBUG: 1
+      DB_NAME: trasherdb
+      DB_USER: trasheruser
+      DB_PASSWORD: trasherpass
+      DB_HOST: db
+      DB_PORT: 5432
+
+  appsmith:
+    image: appsmith/appsmith-ce
+    container_name: trasherbox-appsmith
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - appsmith_data:/appsmith-stacks
+    restart: unless-stopped
+    depends_on:
+      - backend
+
+  tienda:
+    container_name: trasherbox-tienda
+    build:
+      context: ./mi-tienda-cartones
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+
+
+volumes:
+  postgres_data:
+  appsmith_data:

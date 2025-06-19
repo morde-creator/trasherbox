@@ -1,4 +1,4 @@
-version: '3.9'
+version: "3.9"
 
 services:
   db:
@@ -17,15 +17,13 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
-    networks:
-      - trasherbox-net
 
   backend:
     container_name: trasherbox-backend
     build:
       context: ./trasherbox/backend
-    volumes:
-      - ./trasherbox/backend/src:/app:z
+    ports:
+      - "8000:8000"
     depends_on:
       db:
         condition: service_healthy
@@ -42,49 +40,27 @@ services:
         python manage.py migrate &&
         python manage.py runserver 0.0.0.0:8000
       "
-    networks:
-      - trasherbox-net
+
+  tienda:
+    container_name: trasherbox-tienda
+    build:
+      context: ./mi-tienda-cartones
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
 
   appsmith:
     image: appsmith/appsmith-ce
     container_name: trasherbox-appsmith
     ports:
-      - "8080:80"   # Evita conflicto con proxy
+      - "8080:80"
       - "8443:443"
     volumes:
       - appsmith_data:/appsmith-stacks
     restart: unless-stopped
     depends_on:
       - backend
-    networks:
-      - trasherbox-net
-
-  tienda:
-    container_name: trasherbox-tienda
-    build:
-      context: ./mi-tienda-cartones
-    depends_on:
-      - backend
-    networks:
-      - trasherbox-net
-
-  proxy:
-    image: nginx:alpine
-    container_name: trasherbox-proxy
-    volumes:
-        - ./nginx/my_proxy.conf:/etc/nginx/conf.d/my_proxy.conf:ro
-    ports:
-      - "80:80"
-      - "443:443"
-    depends_on:
-      - tienda
-      - backend
-      - appsmith
-    networks:
-      - trasherbox-net
-
-networks:
-  trasherbox-net:
 
 volumes:
   postgres_data:
