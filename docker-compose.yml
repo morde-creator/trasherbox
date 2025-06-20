@@ -9,7 +9,7 @@ services:
       POSTGRES_USER: trasheruser
       POSTGRES_PASSWORD: trasherpass
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data  # ✅ Datos persistentes
     ports:
       - "5433:5432"
     healthcheck:
@@ -24,6 +24,7 @@ services:
     container_name: trasherbox-backend
     build:
       context: ./trasherbox/backend
+    user: "${UID}:${GID}"         # 👈 añade esta línea
     ports:
       - "8000:8000"
     depends_on:
@@ -36,9 +37,11 @@ services:
       DB_PASSWORD: trasherpass
       DB_HOST: db
       DB_PORT: 5432
+    volumes:
+      - ./trasherbox/backend/src:/app
     command: >
       sh -c "
-        echo 'Esperando a la base de datos...' &&
+        echo 'Esperando base de datos...' &&
         python manage.py migrate &&
         python manage.py runserver 0.0.0.0:8000
       "
@@ -56,23 +59,8 @@ services:
     networks:
       - trasherbox-net
 
-  appsmith:
-    image: appsmith/appsmith-ce
-    container_name: trasherbox-appsmith
-    ports:
-      - "8080:80"
-      - "8443:443"
-    volumes:
-      - appsmith_data:/appsmith-stacks
-    restart: unless-stopped
-    depends_on:
-      - backend
-    networks:
-      - trasherbox-net
+volumes:
+  postgres_data:  # ✅ Persistencia garantizada
 
 networks:
   trasherbox-net:
-
-volumes:
-  postgres_data:
-  appsmith_data:
